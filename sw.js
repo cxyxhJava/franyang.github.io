@@ -23,7 +23,7 @@ const getFixedUrl = (req) => {
 
   // 1. fixed http URL
   // Just keep syncing with location.protocol 
-  // fetch(httpURL) belongs to active mixed content. 
+  // fetch(httpURL) belongs to active mixed content. ˙
   // And fetch(httpRequest) is not supported yet.
   url.protocol = self.location.protocol
 
