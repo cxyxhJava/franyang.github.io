@@ -18,9 +18,9 @@ sidebar-avatar: /img/avatar_m.jpg    # use absolute URL, seeing it's used in bot
 
 # SNS settings
 RSS: false
+  github_username: franyang
 # weibo_username:     qiubaiying
 #zhihu_username:     qiubaiying˙
-  github_username:    franyang
 #facebook_username:  baiying.qiu.7
 #jianshu_username:   e71990ada2fd
 #twitter_username:   qiubaiying
