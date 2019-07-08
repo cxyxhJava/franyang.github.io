@@ -53,7 +53,7 @@ On that foundation, Spring WebFlux provides a choice of two programming models:
 ### 1.1.4. Applicability 适用性
 A natural question to ask but one that sets up an unsound dichotomy. Actually, both work together to expand the range of available options. The two are designed for continuity and consistency with each other, they are available side by side, and feedback from each side benefits both sides. The following diagram shows how the two relate, what they have in common, and what each supports uniquely:<br>
 一个自然而然的问题，但是一个人提出了一个不合理的二分法。实际上，两者共同努力扩大可用选项的范围。两者的设计是为了保持连续性和一致性，它们可以并排使用，每一方的反馈都有利于双方。下图显示了两者之间的关系，它们的共同点以及各自的唯一支持：
-![](/postImg/spring-mvc-and-webflux-venn.png "")
+
 
 We suggest that you consider the following specific points:<br>
 我们建议您考虑以下具体要点:
