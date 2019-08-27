@@ -1,7 +1,7 @@
 # Site settings
-title: FranYang
-SEOTitle: FranYang的博客
-header-img: img/post-bg-desk.jpg
+title: 程序猿小哈
+SEOTitle: 程序猿小哈的博客
+header-img: img/post-bg-debug.png
 email: 
 description: "Every failure is leading towards success."
 keyword: "FranYang"
@@ -11,8 +11,8 @@ github_repo: "https://github.com/franyang/franyang.github.io.git" # you code rep
 
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
-sidebar-about-description: "个人简介"
-sidebar-avatar: /img/avatar_m.jpg    # use absolute URL, seeing it's used in both `/` and `/about/`
+sidebar-about-description: "微信公众号程序猿小哈"
+sidebar-avatar: /img/my.jpeg    # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
 
@@ -24,6 +24,7 @@ github_username: franyang
 #facebook_username:  baiying.qiu.7
 #jianshu_username:   e71990ada2fd
 #twitter_username:   qiubaiying
+weixin_username: 程序猿小哈
 
 
 
