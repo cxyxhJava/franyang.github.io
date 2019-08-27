@@ -11,7 +11,7 @@ github_repo: "https://github.com/franyang/franyang.github.io.git" # you code rep
 
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
-sidebar-about-description: "添加微信公众号程序猿小哈 或许更多文章和资源推送"
+sidebar-about-description: "添加微信公众号程序猿小哈 获取更多文章和资源推送"
 sidebar-avatar: /img/myWx.jpeg    # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
