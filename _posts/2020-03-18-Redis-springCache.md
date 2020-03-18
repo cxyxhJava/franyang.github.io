@@ -10,7 +10,6 @@ tags:
     - NoSql
     - 数据库
 ---
-
 ## Redis实现SpringCache
 SpringBoot的CacheManager可以实现缓存.本文将介绍如何使用Redis来管理缓存.
 
@@ -19,13 +18,10 @@ SpringBoot的CacheManager可以实现缓存.本文将介绍如何使用Redis来�
 + redis实现cacheManager
 
 本文以springboot2.0为例
-
 ### 整合Redis和SpringBoot
-
 整合Redis和SpringBoot有两种方式
-1.redis本身jar包并使用`Jedis`进行操作
-2.使用SpringBoot的starter模式进行连接
-
+1. redis本身jar包并使用`Jedis`进行操作
+2. 使用SpringBoot的starter模式进行连接
 本文用starter模式进行讲解
 + 导入springBoot的包
 ```
@@ -713,14 +709,12 @@ public class RedisConfig extends CachingConfigurerSupport {
 }
 ```
 ### 使用
-Spring缓存注解@Cacheable、@CacheEvict、@CachePut使用
-
+Spring缓存注解`@Cacheable`、``@CacheEvict`、`@CachePut`使用
+#### @Cacheable
 ```
 @Cacheable(value = "user",keyGenerator = "myKeyGenerator",unless = "#result==null")
 ```
-
-#### @Cacheable
- ````
+````
  @Cacheable可以标记在一个方法上，也可以标记在一个类上。当标记在一个方法上时表示该方法是支持缓存的，当标记在一个类上时则表示该类所有的方法都是支持缓存的。对于一个支持缓存的方法，Spring会在其被调用后将其返回值缓存起来，以保证下次利用同样的参数来执行该方法时可以直接从缓存中获取结果，而不需要再次执行该方法。Spring在缓存方法的返回值时是以键值对进行缓存的，值就是方法的返回结果，至于键的话，Spring又支持两种策略，默认策略和自定义策略，这个稍后会进行说明。需要注意的是当一个支持缓存的方法在对象内部被调用时是不会触发缓存功能的。`@Cacheable`可以指定四个属性，`value`、`key`、`condition`，`keyGenerator`.
  1.1 value属性指定Cache名称
  1.2 使用key属性自定义key
