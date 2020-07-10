@@ -1,0 +1,189 @@
+# Redis内部结构
+ Redis是一种key/value型数据库,其中,每个key和value都是使用对象表示的.每个Key都是一个字符串对象, 每个value是一个redisObject对象. 其数据结构如下:
+
+```
+/*
+ * Redis 对象
+ */
+typedef struct redisObject {
+
+    // 类型
+    unsigned type:4;
+
+    // 不使用(对齐位)
+    unsigned notused:2;
+
+    // 编码方式
+    unsigned encoding:4;
+
+    // LRU 时间(相对于 server.lruclock)
+    unsigned lru:22;
+
+    // 引用计数
+    int refcount;
+
+    // 指向对象的值
+    void *ptr;
+
+} robj;
+```
+不同类型和编码的对象之间的关系如下： 
+[]()
+[]()
+
+
+注：目前redis新版本的list采用`quicklist`,本质是`linkedlist+ziplist` 
+
+下面简要介绍下几个数据结构: 
+
+## 简单动态字符串
+底层数据结构为`SDS(simple dynamic string)`,即`简单动态字符串`
+```
+/*
+ * 保存字符串对象的结构
+ */
+struct sdshdr {
+
+    // buf 中已占用空间的长度
+    int len;
+
+    // buf 中剩余可用空间的长度
+    int free;
+
+    // 数据空间, 以/0结尾
+    char buf[];
+};
+```
+SDS包含两种格式:`raw`和`embstr`
+内存分配代码如下:
+```
+#define REDIS_ENCODING_EMBSTR_SIZE_LIMIT 39
+robj *createStringObject(char *ptr, size_t len) {
+    if (len <= REDIS_ENCODING_EMBSTR_SIZE_LIMIT)
+        return createEmbeddedStringObject(ptr,len);
+    else
+        return createRawStringObject(ptr,len);
+```
+raw格式字符串适用于字符串长度大于39字节,redis3.2版本以后为44个,会调用两次内存分配
+
+embstr编码专门用来保存短字符串的,通过一次内存分配函数来分配一块连续的空间,一次包含1redisObject1和`sdshdr`两个结构.
+
+二者的区别如下图:
+
+
+
+ 
+
+     
+## 链表
+链表是一种比较常见的数据结构,易于插入和删除,但随机访问困难.
+
+列表list的底层实现就是链表(quicklist=链表+ziplist),此外,Redis的发布和订阅,慢查询,监视器等也都用到链表
+
+链表的定义
+```
+typedef struct listNode {
+    // 前置节点
+    struct listNode *prev;
+    // 后置节点
+    struct listNode *next;
+    // 节点值
+    void *value;
+} listNode;
+```
+
+listNode的数据结构
+```
+typedef struct list {
+    // 链表头节点
+    listNode *head;
+    // 链表尾节点
+    listNode *tail;
+    // 节点值复制函数
+    void *(*dup)(void *ptr);
+    // 节点值释放函数
+    void (*free)(void *ptr);
+    // 节点值对比函数
+    int (*match)(void *ptr, void *key);
+    // 链表所包含的节点数量
+    unsigned long len;
+} list;
+```
+       
+## 字典
+底层是key-value数据库.
+
+字典的数据结构如下:    
+```
+typedef struct dict {
+    // 类型特定函数
+    dictType *type;
+    // 私有数据
+    void *privedata;
+    // 哈希表
+    dictht  ht[2];
+    // rehash 索引
+    in rehashidx;
+}
+```
+哈希表的数据结构
+```
+typedef struct dictht {
+   //哈希表数组
+   dictEntry **table;
+   //哈希表大小
+   unsigned long size;
+
+   //哈希表大小掩码,用于计算索引值
+   unsigned long sizemask;
+   //该哈希表已有节点的数量
+   unsigned long used;
+}
+```
+每个字典自带两个hash表,一个平时使用,一个用来rehash. 与HashMap原理一样,重要的属性包含(size数组容量大小,Entry<K,V>数组,usedSize已使用数组大小,maskSize用于取模定位槽位),Entry(key,value,next) 
+
++ 计算过程:根据hash(key)&maskSize计算出槽位,存储到数组中.
++ 如何解决hash冲突:链表(Redis采用),红黑树
++ 扩容：扩大一倍,新建数组,重新计算hash值和槽位,存储后,更换引用
+
+## 跳跃表skiplist
++ 时间复杂度：平均O(logN),最坏O(N)
++ 用途： sortedset顺序性操作批量处理
++ 数据结构：有序集合的底层实现之一(元素比较多,元素均为长的字符串),集群节点内部
+ 
+## 整数集合intset  
++ 用途：set
++ 类型：int16_t,int32_t,int64_t
++ 属性：encoding,length,int8_t []
++ 升级：新增整数大小超过之前的范围 
+## 压缩列表ziplist
++ 用途：列表键list,哈希键hashtable
++ 使用场景：列表键包含少量列表项,每个列表项均不是长字符串(小整数或短字符串)
++ 介绍：压缩列表是Redis为了节省内存而开发的,是由一系列特殊编码的连续内存块组成的顺序型数据结构.一个压缩列表可以包含多个节点,每个节点可包含一个字节数组或一个整数值. 
++ 结构：zlbytes(uint32 4字节)  zltails(uint32 4字节)  zllen(uint16 2字节) entry1 entry2 ... entryN zlend(uint8 1字节 0xFF)
++ 解释：zlbytes(整个结构占用内存字节数),zltail(尾部节点距离起始地址字节),zllen(节点个数),entryX(节点个数)
+
+## Redis内存分配原则
+redis采用的是`jemalloc`内存分配器,可以分配8,16,32,64字节等大小的内存
+
+## Redis命令中type key与object encoding key的区别
+`type`查看的对象的类型
+
+`encoding`查看的是数据结构底层的实现方式
+```
+10.38.162.118:7004> set mina-test "1233"
+OK
+10.38.162.118:7004> object encoding mina-test
+"int"
+10.38.162.118:7004> set mina-test "1233test"
+OK
+10.38.162.118:7004> object encoding mina-test
+"embstr"
+10.38.162.118:7004> set mina-test "1233test111111111111111111111111111111111111111111111111111111111111111111111111"
+OK
+10.38.162.118:7004> object encoding mina-test
+"raw"
+```
+版权声明：本文为CSDN博主「pl在之心」的原创文章,遵循CC 4.0 BY-SA版权协议,转载请附上原文出处链接及本声明.
+
+https://blog.csdn.net/u010627840/article/details/82144523

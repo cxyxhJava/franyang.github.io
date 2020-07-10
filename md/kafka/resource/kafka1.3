@@ -1,0 +1,101 @@
+# 1.3 Quick Start 快速开始
+本教程假定您是从头开始的，并且没有现有的Kafka或ZooKeeper数据。 由于Kafka控制台脚本在基于Unix的平台和Windows平台上有所不同，因此在Windows平台上使用`bin\windows\`而不是`bin/`，并将脚本扩展名更改为`.bat`。
+
+## Step 1: Download the code
+
+[Download]{https://www.apache.org/dyn/closer.cgi?path=/kafka/2.5.0/kafka_2.12-2.5.0.tgz} the 2.5.0 release and un-tar it.
+```
+> tar -xzf kafka_2.12-2.5.0.tgz
+> cd kafka_2.12-2.5.0
+```
+
+## Step 2: Start the server
+Kafka使用ZooKeeper，因此如果您还没有，请先启动ZooKeeper服务器。 您可以使用kafka随附的便利脚本来获取快速且肮脏的单节点ZooKeeper实例。
+```
+> bin/zookeeper-server-start.sh config/zookeeper.properties
+[2013-04-22 15:01:37,495] INFO Reading configuration from: config/zookeeper.properties (org.apache.zookeeper.server.quorum.QuorumPeerConfig)
+...
+```
+
+Now start the Kafka server:
+```
+> bin/kafka-server-start.sh config/server.properties
+[2013-04-22 15:01:47,028] INFO Verifying properties (kafka.utils.VerifiableProperties)
+[2013-04-22 15:01:47,051] INFO Property socket.send.buffer.bytes is overridden to 1048576 (kafka.utils.VerifiableProperties)
+...
+```
+
+## Step 3: Create a topic
+
+让我们创建一个名为“test”的主题，它只有一个分区和一个副本:
+
+```
+> bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic test
+```
+我们现在可以看到的主题，如果我们运行列表主题命令:
+```
+> bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+test
+```
+或者，您也可以将代理配置为在发布不存在的主题时自动创建主题，而不是手动创建主题。
+
+## Step 4: Send some messages
+Kafka附带一个命令行客户端，它将从文件或标准输入获取输入，并将其作为消息发送到Kafka集群。默认情况下，每一行都作为单独的消息发送。
+运行生成器，然后在控制台中键入一些消息以发送到服务器。
+```
+> bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic test
+This is a message
+This is another message
+```
+
+## Step 5: Start a consumer
+Kafka还有一个命令行使用者，它将把消息转储到标准输出。
+```
+> bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --from-beginning
+This is a message
+This is another message
+```
+如果您在不同的终端上运行了上面的每个命令，那么您现在应该能够在生产者终端中输入消息，并看到它们出现在消费者终端中。
+
+所有的命令行工具都有额外的选项;在没有参数的情况下运行该命令将显示详细记录这些参数的使用信息。
+
+## Step 6: Setting up a multi-broker cluster
+到目前为止，我们只与一个经纪人竞争，但这并不有趣。对于Kafka，单个代理只是一个大小为1的集群，因此除了启动多个代理实例外，不会有什么大的变化。但是为了对它有所了解，让我们将集群扩展到三个节点(仍然都在本地机器上)。
+
+首先，我们为每个代理创建一个配置文件(在Windows中使用`copy`命令):
+```
+> cp config/server.properties config/server-1.properties
+> cp config/server.properties config/server-2.properties
+```
+现在编辑这些新文件，并设置以下属性:
+```
+config/server-1.properties:
+    broker.id=1
+    listeners=PLAINTEXT://:9093
+    log.dirs=/tmp/kafka-logs-1
+
+config/server-2.properties:
+    broker.id=2
+    listeners=PLAINTEXT://:9094
+    log.dirs=/tmp/kafka-logs-2
+```
+`broker.id` 属性是集群中每个节点的唯一和永久名称。我们必须重写端口和日志目录，只是因为我们在同一台机器上运行它们，并且我们希望防止代理都试图在同一端口上注册或覆盖彼此的数据。
+
+我们已经有Zookeeper和我们的单节点启动，所以我们只需要启动两个新节点:
+```
+> bin/kafka-server-start.sh config/server-1.properties &
+...
+> bin/kafka-server-start.sh config/server-2.properties &
+...
+```
+现在，创建一个具有三个副本的新主题：
+```
+> bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 3 --partitions 1 --topic my-replicated-topic
+```
+但现在我们有了集群我们怎么知道哪个代理在做什么?要查看运行`describe topics`命令:
+```
+> bin/kafka-topics.sh --describe --bootstrap-server localhost:9092 --topic my-replicated-topic
+Topic:my-replicated-topic   PartitionCount:1    ReplicationFactor:3 Configs:
+    Topic: my-replicated-topic  Partition: 0    Leader: 1   Replicas: 1,2,0 Isr: 1,2,0
+```
+

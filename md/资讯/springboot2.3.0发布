@@ -1,0 +1,59 @@
+# Spring Boot 2.3.0 发布
+
+## 依赖升级
+新版本核心组件依赖升级
+
++ Spring Data Neumann
+
++ Spring HATEOAS 1.1
+
++ Spring Integration 5.3
+
++ Spring Kafka 2.5
+
++ Spring Security 5.3
+
++ Spring Session Dragonfruit
+
+## 三方组件依赖
+
++ Cassandra Driver 4.6
+
++ Couchbase Client 3.0
+
++ Elasticsearch 7.6
+
++ Kafka 2.5
+
++ Micrometer 1.5
+
++ MongoDB 4.0
+
+## 支持 Java 14,
+spring boot 2.3.0支持`Java 14`,同样对`Java 11``Java 8`提供兼容
+
+## Docker 容器支持
+spring boot 2.3.0添加了部分功能用来帮助将Spring Boot应用直接打包到`Docker镜像`.
+
+## 支持 Cloud Native Buildpacks 构建镜像
+
+`maven插件`增加 `spring-boot:build-image``gradle增加bootBuildImage task` 帮助快速构建镜像
+
+## 支持`jar分层`,更好的优化打包镜像过程
+
+## 优雅关机
+目前内置的四个嵌入式Web服务器（`Jetty`,`Reactor Netty`,`Tomcat`和`Undertow`）以及响应式和基于Servlet的Web应用程序都支持优雅关机.
+
+配置关机缓冲时间后,在关闭时,Web服务器将不再允许新请求,并且将等待缓冲时间以使活动请求完成.
+
+## 服务可用性探针
+spring boot 2.3.0内置了应用可用性判断的功能,可以跟踪应用程序是否处理活动状态和是否准备好处理请求.详细可以参考:`liveness-and-readiness-probes-with-spring-boot`
+
+## 其他变化
+详细的发版日志可以参考`Spring-Boot-2.3-Release-Notes`.也可以在此处找到在下一版本中删除的不推荐使用的类和方法的列表.
+
+目前spring boot已经有680多人参与提交了代码, 并且超过26000次 commit.
+## 相关链接
+Spring Boot 的官网地址:[点击查看](https://spring.io/projects/spring-boot).
+
+Spring Boot 的git地址:[点击查看](https://github.com/spring-projects/spring-boot).
